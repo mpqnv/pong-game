@@ -1,5 +1,3 @@
-import * as THREE from 'https://cdn.skypack.dev/three@r128';
-
 // Scene setup
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb); // Sky blue
@@ -11,7 +9,7 @@ camera.position.y = 1.6;
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFShadowShadowMap;
+renderer.shadowMap.type = THREE.PCFShadowMap;
 document.getElementById('canvas-container').appendChild(renderer.domElement);
 
 // Lighting
@@ -94,7 +92,6 @@ document.addEventListener('mousemove', (e) => {
 
 document.addEventListener('mousedown', () => {
     mouseDown = true;
-    document.addEventListener('mouselock', () => {}, false);
 });
 
 document.addEventListener('mouseup', () => {
@@ -125,7 +122,7 @@ function shoot() {
     bullet.position.copy(camera.position);
     bullet.position.addScaledVector(direction, 2);
 
-    bullet.velocity = direction.multiplyScalar(0.5);
+    bullet.velocity = direction.clone().multiplyScalar(0.5);
     bullet.life = 100;
 
     scene.add(bullet);
@@ -166,7 +163,11 @@ function spawnEnemy() {
 // Create explosion
 function createExplosion(position) {
     const explosionGeometry = new THREE.SphereGeometry(1, 8, 8);
-    const explosionMaterial = new THREE.MeshBasicMaterial({ color: 0xff4500 });
+    const explosionMaterial = new THREE.MeshBasicMaterial({ 
+        color: 0xff4500,
+        transparent: true,
+        opacity: 1
+    });
     const explosionMesh = new THREE.Mesh(explosionGeometry, explosionMaterial);
     explosionMesh.position.copy(position);
 
@@ -174,7 +175,8 @@ function createExplosion(position) {
     explosions.push({
         mesh: explosionMesh,
         life: 20,
-        maxLife: 20
+        maxLife: 20,
+        scale: 1
     });
 }
 
@@ -291,7 +293,8 @@ function updateExplosions() {
             scene.remove(explosion.mesh);
             explosions.splice(i, 1);
         } else {
-            explosion.mesh.scale.multiplyScalar(1.05);
+            explosion.scale *= 1.05;
+            explosion.mesh.scale.set(explosion.scale, explosion.scale, explosion.scale);
             explosion.mesh.material.opacity = explosion.life / explosion.maxLife;
         }
     }
